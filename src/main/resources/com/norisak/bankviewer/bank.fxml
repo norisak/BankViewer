@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<GridPane alignment="center" hgap="10" prefHeight="600.0" prefWidth="800.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.norisak.bankviewer.BankController">
+   <columnConstraints>
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+   </rowConstraints>
+   <children>
+  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="612.0" prefWidth="800.0">
+         <children>
+            <Button fx:id="captureButton" layoutX="495.0" layoutY="33.0" mnemonicParsing="false" onAction="#onPressCapture" text="Capture" />
+            <ScrollPane fx:id="itemScrollPane" hbarPolicy="NEVER" layoutX="62.0" layoutY="58.0" prefHeight="418.0" prefWidth="353.0" vbarPolicy="ALWAYS">
+               <content>
+                  <VBox fx:id="itemVbox" alignment="TOP_CENTER" prefHeight="416.0" prefWidth="351.0" />
+               </content>
+            </ScrollPane>
+            <Label fx:id="captureStatusLabel" layoutX="495.0" layoutY="67.0" prefHeight="34.0" prefWidth="294.0" textFill="RED" />
+            <Label fx:id="totalWealthLabel" layoutX="62.0" layoutY="24.0" prefHeight="31.0" prefWidth="353.0">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Label>
+            <Button fx:id="saveButton" disable="true" layoutX="575.0" layoutY="33.0" mnemonicParsing="false" onAction="#onPressSave" text="Save bank" />
+            <Button fx:id="loadButton" layoutX="706.0" layoutY="33.0" mnemonicParsing="false" onAction="#onPressLoad" text="Load bank" />
+            <Button fx:id="compareButton" disable="true" layoutX="706.0" layoutY="116.0" mnemonicParsing="false" onAction="#onPressCompare" text="Compare..." />
+            <Label layoutX="431.0" layoutY="376.0" text="Order by:" />
+            <RadioButton fx:id="radioButtonOrderByStackValue" layoutX="431.0" layoutY="410.0" mnemonicParsing="false" onAction="#onSortSettingsChanged" prefHeight="11.0" prefWidth="87.0" selected="true" text="Stack value">
+               <toggleGroup>
+                  <ToggleGroup fx:id="sortToggleGroup" />
+               </toggleGroup>
+            </RadioButton>
+            <RadioButton fx:id="radioButtonOrderByItemValue" layoutX="431.0" layoutY="435.0" mnemonicParsing="false" onAction="#onSortSettingsChanged" text="Unit value" toggleGroup="$sortToggleGroup" />
+            <RadioButton fx:id="radioButtonOrderByStackSize" layoutX="431.0" layoutY="460.0" mnemonicParsing="false" onAction="#onSortSettingsChanged" text="Stack size" toggleGroup="$sortToggleGroup" />
+            <RadioButton fx:id="radioButtonOrderByNatural" layoutX="431.0" layoutY="485.0" mnemonicParsing="false" onAction="#onSortSettingsChanged" text="Natural order" toggleGroup="$sortToggleGroup" />
+            <CheckBox fx:id="reverseOrderCheckbox" layoutX="431.0" layoutY="520.0" mnemonicParsing="false" onAction="#onSortSettingsChanged" text="Reverse order" />
+         </children>
+      </AnchorPane>
+   </children>
+</GridPane>

@@ -1,4 +1,4 @@
-#How to install:
+# How to install:
 
 **WARNING: Do not trust any compiled jar file from any other source than this repository as it may be malicious.**
 

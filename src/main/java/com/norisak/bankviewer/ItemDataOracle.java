@@ -30,6 +30,7 @@ public class ItemDataOracle {
 	private HashSet<Integer> nonExistingIcons;
 	private HashMap<Integer, String> itemNames;
 	private HashMap<String, Integer> tradableNameLookup;
+	private HashMap<String, Integer> nameLookup;
 	private HashMap<Integer, ItemValueCompound[]> compounds;
 
 	private int wealthIncludeLevel = 3;
@@ -39,10 +40,13 @@ public class ItemDataOracle {
 
 	public ItemDataOracle(){
 		loadCacheJson();
-		compounds = new HashMap();
-		createItemValueCompounds();
 	}
 
+	/**
+	 * Gets the value of an item when given its item ID
+	 * @param id the item ID
+	 * @return the value of a single unit of that item
+	 */
 	public long getValueFromId(int id){
 		ItemData itemData = itemMap.get(id);
 
@@ -76,6 +80,10 @@ public class ItemDataOracle {
 		return new Image(f.toURI().toString());
 	}
 
+	public int getIdFromName(String name){
+		return nameLookup.getOrDefault(name, -1);
+	}
+
 	public ItemValueCompound getBestCompound(ItemValueCompound[] itemValueCompounds){
 		long maxValue = -1;
 
@@ -92,19 +100,11 @@ public class ItemDataOracle {
 
 	public long getValueFromName(String name){
 
-		if (name.equals("Crystal hatchet")){  //TODO: Find a better way to do this
-			name = "Dragon hatchet";
-		}
-		if (name.equals("Crystal pickaxe")){
-			name = "Dragon pickaxe";
-		}
 
 		if (includeRecoverableUntradableWealth && name.startsWith("Augmented ")){
-			System.out.println("Found augmented item: "+name);
 			String nonAugmentedName = Character.toUpperCase(name.charAt(10)) + name.substring(11);
 
-			System.out.println("Looking up "+ nonAugmentedName);
-			return getValueFromName(nonAugmentedName);
+			return getValueFromId(getIdFromName(nonAugmentedName));
 		}
 
 		Integer id;
@@ -112,8 +112,49 @@ public class ItemDataOracle {
 			return getValueFromId(id);
 		}
 
+		// Check if this is a potion with weird dose count and interpolate value
+		// TODO: Potion flasks (or just add 6 dose potion flasks to untradables.txt)
+		if (name.matches(".*[(][1-6][)]")){
+			System.out.println("Weird dosage detected for "+name);
+			int dosePosition = name.lastIndexOf(")") - 1;
+			int dosage = Integer.parseInt(name.substring(dosePosition, dosePosition + 1));
+
+			// Check if a 3 dose variant exists
+			if (dosage != 3){
+				String testName = name.substring(0,dosePosition) + '3' + name.substring(dosePosition + 1);
+
+				if (itemHasData(testName)){
+					double value = getValueFromId(getIdFromName(testName));
+					//System.out.println("Found data for "+testName+" when " + name + " didnt exist with value " + value);
+					return (long)((double)dosage / 3.0 * (double) getValueFromId(getIdFromName(testName)));
+				}
+			}
+			// Check if a 6 dose variant exists
+			if (dosage != 6){
+				String testName = name.substring(0, dosePosition) + '6' + name.substring(dosePosition + 1);
+
+				if (itemHasData(testName)){
+					double value = getValueFromId(getIdFromName(testName));
+					//System.out.println("Found data for "+testName+" when " + name + " didnt exist with value " + value);
+					return (long)((double)dosage / 6.0 * (double) getValueFromId(getIdFromName(testName)));
+				}
+			}
+		}
+
 
 		return 0;
+	}
+
+	/**
+	 * Returns true if this item either has tradable item data or has a compound directly associated with it
+	 * @param itemname
+	 * @return
+	 */
+	public boolean itemHasData(String itemname){
+		int id = nameLookup.getOrDefault(itemname, -1);
+		if (id == -1)
+			return false;
+		return itemMap.containsKey(id) || compounds.containsKey(id);
 	}
 
 	public void updateItemPrice(int id, long price){
@@ -136,41 +177,13 @@ public class ItemDataOracle {
 		return itemMap.get(id);
 	}
 
-	public void createItemValueCompounds(){
 
-		// Overload (3)
-		IVComponent[] overloadComponents = new IVComponent[6];
-
-		overloadComponents[0] = new IVComponent(15309, 1.0); // Extreme attack (3)
-		overloadComponents[1] = new IVComponent(15313, 1.0); // Extreme strength (3)
-		overloadComponents[2] = new IVComponent(15317, 1.0); // Extreme defence (3)
-		overloadComponents[3] = new IVComponent(15325, 1.0); // Extreme ranging (3)
-		overloadComponents[4] = new IVComponent(15321, 1.0); // Extreme magic (3)
-		overloadComponents[5] = new IVComponent(269, 1.0); // Clean torstol
-
-		putCompound(15333, new ItemValueCompound(3, overloadComponents));
-
-		// Extreme attack (3)
-		//"Extreme attack (3)"|"Super attack (3)","Clean avantoe"
-	}
-/*
 	public void loadCompounds(String filename){
 
 		try {
-			String text =  new Scanner(new File(filename)).useDelimiter("\\Z").next();
-
-			Iterator<> i = Arrays.asList(text.toCharArray()).iterator();
-			while (true){
-				str = new StringBuilder();
-				// Check if its an itemName or id
-				str.append((char)is.read());
-
-				if (str.toString().equals("\"")){ // Using item name
-					char c;
-					while (is.rea)
-
-				}
-
+			Scanner scan = new Scanner(new FileInputStream(filename));
+			while (scan.hasNextLine()){
+				ItemValueCompound.fromString(scan.nextLine(), this);
 
 			}
 
@@ -181,7 +194,7 @@ public class ItemDataOracle {
 		}
 
 
-	}*/
+	}
 
 	/**
 	 * Adds the itemValueCompound to the the array at the specified item id, either creating or extending an array.
@@ -231,7 +244,8 @@ public class ItemDataOracle {
 	}
 
 	private void loadCacheJson(){
-
+		nameLookup = new HashMap();
+		compounds = new HashMap();
 
 		String json;
 		try {
@@ -278,8 +292,15 @@ public class ItemDataOracle {
 		}
 		while (scan.hasNextLine()){
 			String[] tokens = scan.nextLine().split(" - ");
-			itemNames.put(Integer.parseInt(tokens[0]), tokens.length >= 2 ? tokens[1] : "");
+			String name = tokens.length >= 2 ? tokens[1] : "";
+			itemNames.put(Integer.parseInt(tokens[0]), name);
+
+			if (!nameLookup.containsKey(name)){
+				nameLookup.put(name,Integer.parseInt(tokens[0]));
+			}
 		}
+
+		loadCompounds("untradables.txt");
 
 
 		Main.runOnShutdown.add(new Runnable() {

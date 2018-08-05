@@ -27,6 +27,6 @@ Make sure you have JDK8 or newer installed.
  - Open the command line or terminal in the main folder of the source(the one with the `gradlew` file in it). 
  - Run the command `gradlew compileJar`
 
-The compiled jar file should appear in the build/libs/ folder. Put this file in a directory of choice along with the `items.txt` and `cache.json` files.
+The compiled jar file should appear in the build/libs/ folder. Put this file in a directory of choice along with the `items.txt`, `untradables.txt` and `cache.json` files.
 
 You should now be able to run the jar file and BankViewer should work correctly.

@@ -6,3 +6,4 @@
 "Overload (3)"|UNRECOVERABLE,"Extreme attack (3)","Extreme defence (3)","Extreme strength (3)","Extreme magic (3)","Extreme ranging (3)","Clean torstol"
 "Crystal pickaxe"|RECOVERABLE,"Dragon pickaxe"
 "Crystal hatchet"|RECOVERABLE,"Dragon hatchet"
+"Super antifire (3)"|UNRECOVERABLE,"Antifire (3)"

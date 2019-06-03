@@ -10,9 +10,14 @@ import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.namednumber.EtherType;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PacketHandler {
 
@@ -24,6 +29,9 @@ public class PacketHandler {
 	// When the runescape address is identified it will be stored in this field
 	private InetAddress rsAddress = null;
 
+	// A collection of the IP address of all runescape worlds
+	private Set<InetAddress> worldAddresses = null;
+
 	private volatile boolean stop = false;
 
 	private TcpReassembler reassembler;
@@ -34,6 +42,34 @@ public class PacketHandler {
 		reassembler = null;
 		this.decoder = decoder;
 		this.bankController = bankController;
+	}
+
+
+
+	public void generateIpWhitelist(){
+		if (worldAddresses != null){
+			return;
+		}
+		long nano = System.nanoTime();
+		worldAddresses = Collections.synchronizedSet(new HashSet<InetAddress>());
+
+		ExecutorService ex = Executors.newFixedThreadPool(10);
+
+		for (int i = 1; i < 142; ++i){
+			final int world = i;
+			ex.submit(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						InetAddress addr = InetAddress.getByName("world"+world+".runescape.com");
+						worldAddresses.add(addr);
+					} catch (UnknownHostException e) {
+						System.out.println("World "+ world + " didnt exist.");
+					}
+				}
+			});
+		}
+		ex.shutdown();
 	}
 
 
@@ -81,15 +117,16 @@ public class PacketHandler {
 				return;
 
 			// We haven't seen this address before. Check if it's from a runescape server
-			String hostname = srcAddr.getCanonicalHostName();
-			if (hostname.startsWith("world") && hostname.endsWith(".runescape.com")){  // It's an actual runescape server
+			//TODO: Find a more reliable way to do this
+			if (worldAddresses.contains(srcAddr)){  // It's an actual runescape server
 				rsAddress = srcAddr;
 				System.out.println("We found our IP! "+ srcAddr);
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
 						bankController.getCaptureStatusLabel().setTextFill(Color.GREEN);
-						bankController.getCaptureStatusLabel().setText("Connection found to "+hostname + "\nOpen your bank.");
+						// TODO: Write which world
+						bankController.getCaptureStatusLabel().setText("Connection found to " + srcAddr + "\nOpen your bank.");
 					}
 				});
 				reassembler = new TcpReassembler(tcpPacket, decoder);

@@ -115,6 +115,7 @@ public class BankController {
 		decoder = new ByteArrayDecoder(this);
 
 		handler = new PacketHandler(decoder, this);
+		handler.generateIpWhitelist();
 
 		itemStackComparators = new HashMap<>();
 
